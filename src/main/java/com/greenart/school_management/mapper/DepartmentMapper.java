@@ -19,4 +19,6 @@ public interface DepartmentMapper {
     public Integer seletLatestDataSeq();
 
     public void insertDepartmentHistory(DepartmentHistoryVO data);
+
+    public List<DepartmentVO> getDepartmentByKeyword(String keyword);
 }

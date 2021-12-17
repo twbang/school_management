@@ -10,6 +10,7 @@
     <title>Document</title>
     <%@include file="/WEB-INF/includes/header.jsp"%>
     <link rel="stylesheet" href="/assets/css/department_list.css">
+    <link rel="stylesheet" href="/assets/css/teacher_list.css">
     <script src="/assets/js/teacher.js"></script>
 </head>
 <body>
@@ -19,7 +20,13 @@
         <div class="content_area">
             <div class="menu_area">
                 <div class="search_box">
-                    <input type="text" id="keyword" placeholder="이름 입력" value="${data.keyword}">
+                    <select id="search_type">
+                        <option value="dept">학과</option>
+                        <option value="name"
+                            <c:if test="${data.type=='name'}">selected</c:if>
+                        >이름</option>
+                    </select>
+                    <input type="text" id="keyword" placeholder="검색어 입력" value="${data.keyword}">
                     <button id="search_btn"><i class="fas fa-search"></i></button>
                 </div>
                 <button id="reset_btn">초기화</button>
@@ -35,52 +42,49 @@
                             <th>생년월일</th>
                             <th>전화번호</th>
                             <th>이메일</th>
+                            <th>상태</th>
                             <th>등록일</th>
                             <th>수정일</th>
                             <th>조작</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td id="nodata" colspan="11">데이터가 없습니다.</td>
-                        </tr>
-                        <tr>
-                            <td>1</td>
-                            <td>컴퓨터공학부</td>
-                            <td>20211214001</td>
-                            <td>교직원</td>
-                            <td>2021-12-14</td>
-                            <td>010-1234-5678</td>
-                            <td>teacher@school.ac.kr</td>
-                            <td>2021-12-14 17:47:36</td>
-                            <td>2021-12-14 17:47:36</td>
-                            <td>
-                                <button class="modify_btn" data-seq=""><i class="fas fa-pencil-alt"></i></button>
-                                <button class="delete_btn" data-seq=""><i class="fas fa-minus-circle"></i></button>
-                            </td>
-                        </tr>
-                        <!-- <tr>
-                            <td>1234</td>
-                            <td>컴퓨터 공학과</td>
-                            <td>120</td>
-                            <td>2021-12-10 11:11:00</td>
-                            <td>2021-12-10 11:11:00</td>
-                            <td>
-                                <button class="modify_btn"><i class="fas fa-pencil-alt"></i></button>
-                                <button class="delete_btn"><i class="fas fa-minus-circle"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>1234</td>
-                            <td>컴퓨터 공학과</td>
-                            <td>120</td>
-                            <td>2021-12-10 11:11:00</td>
-                            <td>2021-12-10 11:11:00</td>
-                            <td>
-                                <button class="modify_btn"><i class="fas fa-pencil-alt"></i></button>
-                                <button class="delete_btn"><i class="fas fa-minus-circle"></i></button>
-                            </td>
-                        </tr> -->
+                        <c:if test="${data.list.size() == 0}">
+                            <tr>
+                                <td id="nodata" colspan="11">데이터가 없습니다.</td>
+                            </tr>
+                        </c:if>
+                        <c:forEach items="${data.list}" var="t">
+                            <tr>
+                                <td>${t.ti_seq}</td>
+                                <td>${t.department_name}</td>
+                                <td>${t.ti_number}</td>
+                                <td>${t.ti_name}</td>
+                                <td>${t.ti_birth}</td>
+                                <td>${t.ti_phone_num}</td>
+                                <td>${t.ti_email}</td>
+                                <td class="teacher_status">
+                                    <c:if test="${t.ti_status == 1}">
+                                        <span style="background-color: rgb(17,226,27);">정상</span>
+                                    </c:if>
+                                    <c:if test="${t.ti_status == 2}">
+                                        <span style="background-color: rgb(255,110,26);">휴직</span>
+                                    </c:if>
+                                    <c:if test="${t.ti_status == 3}">
+                                        <span style="background-color: rgb(251,186,64);">휴가</span>
+                                    </c:if>
+                                    <c:if test="${t.ti_status == 4}">
+                                        <span style="background-color: rgb(255,23,23);">퇴임</span>
+                                    </c:if>
+                                </td>
+                                <td>${t.ti_reg_dt}</td>
+                                <td>${t.ti_mod_dt}</td>
+                                <td>
+                                    <button class="modify_btn" data-seq="${t.ti_seq}"><i class="fas fa-pencil-alt"></i></button>
+                                    <button class="delete_btn" data-seq="${t.ti_seq}"><i class="fas fa-minus-circle"></i></button>
+                                </td>
+                            </tr>
+                        </c:forEach>
                     </tbody>
                 </table>
             </div>
@@ -88,14 +92,14 @@
                 <button id="prev"><i class="fas fa-chevron-left"></i></button>
                 <div class="pagers">
                     <c:forEach begin="1" end="${data.pageCnt}" var="i">
-                        <a href="/department?offset=${(i-1)*10}&keyword=${data.keyword}">${i}</a>
+                        <a href="/teacher?offset=${(i-1)*10}&type=${type}&keyword=${keyword}">${i}</a>
                     </c:forEach>
                 </div>
                 <button id="next"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
     </main>
-    <div class="popup_wrap" style="display:block;">
+    <div class="popup_wrap">
         <div class="popup" id="department_add">
             <div class="top_area">
                 <div class="ico">
@@ -105,7 +109,7 @@
                 <p>교직원 정보를 입력해주세요</p>
             </div>
             <div class="content_area">
-                <input type="text" id="teacher_dep_name" placeholder="학과 명" disabled><br>
+                <input type="text" id="teacher_dep_name" placeholder="학과 명" disabled>
                 <button id="search_dep">학과검색</button>
                 <br>
                 <input type="text" id="teacher_name" placeholder="교직원 명">
@@ -127,6 +131,20 @@
                 <button id="modify_dep">수정하기</button>
                 <button id="cancel_dep">취소하기</button>
             </div>
+        </div>
+    </div>
+    <div class="department_search">
+        <div class="dep_search_box">
+            <input type="text" id="dep_keyword" placeholder="예) 컴퓨터, 컴퓨터공학, 공학">
+            <button id="dep_search_btn"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="search_result">
+            <ul>
+                
+            </ul>
+        </div>
+        <div class="dep_search_buttons">
+            <button id="dep_search_close">닫기</button>
         </div>
     </div>
 </body>
